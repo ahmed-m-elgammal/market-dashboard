@@ -1,0 +1,6 @@
+# Local database test artefacts
+
+Throwaway, git-ignored.
+
+- `.venv/` — uv virtualenv (pytest, psycopg)
+- `__pycache__/`, `.pytest_cache/`

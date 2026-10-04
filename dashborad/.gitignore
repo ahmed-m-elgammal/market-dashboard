@@ -1,0 +1,17 @@
+# Live credentials — never commit.
+supabase.txt
+*.sql.gz
+
+# Dumps of the live schema are large and regenerable with `supabase db dump`.
+schema-dump*.sql
+
+# Local env with real anon/service keys
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/

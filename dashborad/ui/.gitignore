@@ -1,0 +1,15 @@
+node_modules
+dist
+dist-ssr
+*.local
+
+# Vite env files — may contain the anon key.
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log
+.vscode/*
+!.vscode/extensions.json
+.idea

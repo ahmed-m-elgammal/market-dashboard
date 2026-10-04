@@ -1,0 +1,150 @@
+# Supabase project configuration
+# Generated for DeliveryApp Rebuild project
+# Docs: https://supabase.com/docs/guides/local-development
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public"]
+max_rows = 1000
+
+[api.tls]
+enabled = false
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+
+[local_smtp]
+enabled = true
+port = 54324
+
+
+[storage]
+enabled = true
+file_size_limit = "5MB"
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback", "deliveryapp://auth-callback", "deliveryapp://reset-password"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+secure_password_change = false
+
+[auth.external.google]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+
+[auth.external.apple]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+
+[auth.rate_limit]
+email_sent = 2          # seconds between email sends
+sms_sent = 30           # seconds between SMS sends
+anonymous_users = 30    # per hour
+token_refresh = 150     # per hour
+sign_in_sign_ups = 30   # per hour
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"   # "per_worker" or "oneshot"
+
+# Edge Function secrets — these should be set via `supabase secrets set`
+# NOT stored in this file for production. For local development,
+# create a .env.local file with these values.
+#
+# Required environment variables:
+#   SUPABASE_URL                    — Auto-set by Supabase
+#   SUPABASE_SERVICE_ROLE_KEY       — Auto-set by Supabase
+#   SUPABASE_ANON_KEY               — Auto-set by Supabase
+#   PAYMOB_API_KEY                  — From Paymob merchant dashboard
+#   PAYMOB_INTEGRATION_ID           — From Paymob merchant dashboard
+#   PAYMOB_IFRAME_ID                — From Paymob merchant dashboard
+#   PAYMOB_HMAC_SECRET              — From Paymob merchant dashboard
+#   NATIONAL_ID_ENCRYPTION_KEY      — Generate with crypto.generateEncryptionKey()
+#   ALLOWED_ORIGINS                  — Comma-separated allowed CORS origins
+
+# A1-G5 + A3-G6: Scheduled cron jobs.
+# Each entry schedules an Edge Function to run at the specified cron schedule.
+# Schedules use standard 5-field cron (minute hour day-of-month month day-of-week).
+# Docs: https://supabase.com/guides/functions/schedule-functions
+[functions.reconcile-payments]
+verify_jwt = false
+
+# `admin-api` (the admin dashboard proxy, dashborad/ui) is deliberately NOT
+# listed here. Every function below disables JWT verification because pg_cron
+# calls them with no token. admin-api is the opposite case: it is called from a
+# browser session holding a real Supabase JWT, so it keeps the default
+# verify_jwt = true. That means Supabase rejects unauthenticated requests before
+# the handler runs, and the handler's own requireRole(header, 'admin') adds the
+# role check on top. Do not copy the verify_jwt = false pattern from the
+# scheduled functions above.
+#
+# Set ALLOWED_ORIGINS to the dashboard's origin in production; see
+# supabase/functions/_shared/cors.ts.
+
+# NOTE: `auto-cancel-stale-orders` is NOT scheduled here. It runs as a pg_cron
+# job inside the database (every minute, '* * * * *') installed by migration
+# `077_cancel_stale_orders_pg_cron.sql`. The pure-SQL implementation avoids
+# Edge Function cold-start latency on the per-minute path. Operators looking
+# for the schedule should check `pg_cron.job` in the database, not this file.
+
+# P3-7: Auto-expire promo codes and promoted ads every 5 minutes.
+# Flips is_active = false where expires_at < now() AND is_active = true
+# AND deleted_at IS NULL. See supabase/functions/auto-expiry-promos/index.ts.
+[functions.auto-expiry-promos]
+verify_jwt = false
+
+# Phase 4b: Loyalty promo auto-issuance — daily at 02:00 UTC.
+# Finds customers who spent >= 500 EGP in the last 7 days and issues a
+# 10% off promo (max 1 per customer per 30 days). See
+# supabase/functions/auto-issue-loyalty-promos/index.ts.
+[functions.auto-issue-loyalty-promos]
+verify_jwt = false
+
+# S5: Driver settlement auto-generation — daily at 03:30 UTC.
+# Aggregates each driver's pending driver_earnings from the previous window
+# (daily drivers: yesterday; weekly drivers: last 7 days on Sundays; monthly
+# drivers: last calendar month on the 1st) into a settlement row. Skips
+# drivers with no eligible earnings or an existing pending settlement. See
+# supabase/functions/auto-generate-driver-settlements/index.ts + migration
+# 083_driver_settlements.sql.
+[functions.auto-generate-driver-settlements]
+verify_jwt = false
+
+# S4: Merchant payout auto-generation — daily at 03:00 UTC (30 min BEFORE the
+# driver-settlements cron so finance can review both batches together in the
+# morning). Aggregates each merchant's delivered orders from the previous
+# window (daily/weekly/monthly — same cadence logic as driver-settlements)
+# into a payout row, snapshots merchant_payout per order. Skips merchants
+# with no eligible orders or an existing pending payout. See
+# supabase/functions/auto-generate-merchant-payouts/index.ts + migration
+# 085_merchant_payouts.sql.
+[functions.auto-generate-merchant-payouts]
+verify_jwt = false

@@ -1,0 +1,36 @@
+# Market dashboard — repo-local ignore rules.
+#
+# Only dashborad/ and supabase/ live in this repository, so these rules exist to
+# keep build output and local credentials out of it. The parent project's
+# .gitignore is NOT part of this repo, which is why dashborad/** no longer needs
+# suppressing here — and why these rules have to be restated rather than
+# inherited.
+
+# --- dependencies & build output ---
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# --- Python test harness ---
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# --- secrets: commit .env.example, never .env ---
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# --- tooling artefacts ---
+.playwright-mcp/
+.temp/
+*.log
+migrations.zip
+
+# --- OS noise ---
+.DS_Store
+Thumbs.db
